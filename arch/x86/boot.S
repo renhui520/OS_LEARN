@@ -84,5 +84,5 @@
         addl $16, %esp
 
         /* 进入高半核！ */
-        pushl $hhk_entry_
+        pushl $hhk_entry_	#hhk_entry_位于prologue.S中
         ret
