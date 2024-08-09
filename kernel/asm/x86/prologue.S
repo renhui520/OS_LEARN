@@ -54,7 +54,7 @@
 
         sti
 
-        call _kernel_init
+        call _kernel_init	/*位于k_init.c中*/
 
         /* 
             加载新的栈指针，位于0xffbfffff，但因为16字节对齐的需求，低四位清零。

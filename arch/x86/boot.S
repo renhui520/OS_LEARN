@@ -62,9 +62,9 @@
                 1. 初始化最简单的PD与PT（重新映射我们的内核至3GiB处，以及对相应的地方进行Identity Map）
         */
 
-        movl $(KPG_SIZE), 4(%esp)
-        movl $(_k_ptd - 0xC0000000), (%esp)    /* PTD物理地址 */
-        call _hhk_init
+        movl $(KPG_SIZE), 4(%esp)	#为hhk.c中的_hhk_init(ptd_t* ptd, uint32_t kpg_size)提供kpg_size参数
+        movl $(_k_ptd - 0xC0000000), (%esp)    /* PTD物理地址 */   #为hhk.c中的_hhk_init(ptd_t* ptd, uint32_t kpg_size)提供ptd参数
+        call _hhk_init	#调用hhk.c中的_hhk_init函数
 
         /*
             基本的映射定义好了，我们可以放心的打开分页了

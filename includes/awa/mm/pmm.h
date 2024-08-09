@@ -36,7 +36,7 @@ void pmm_mark_chunk_free(uintptr_t start_ppn, size_t page_count);
  * @param start_ppn 起始PPN
  * @param page_count 数量
  */
-void pmm_mark_chunk_occupied(uintptr_t start_ppn, size_t page_count);
+void pmm_mark_chunk_occupied(uint32_t start_ppn, size_t page_count);
 
 /**
  * @brief 分配一个可用的物理页
