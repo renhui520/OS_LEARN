@@ -26,12 +26,6 @@ void
 tty_set_buffer(void* vga_buf);
 
 void
-tty_set_cpos(unsigned int x, unsigned int y);
-
-void
-tty_get_cpos(unsigned int* x, unsigned int* y);
-
-void
 tty_set_theme(vga_attribute fg, vga_attribute bg);
 
 void
@@ -46,7 +40,5 @@ tty_scroll_up();
 void
 tty_clear();
 
-void 
-tty_clear_line(unsigned int y);
 
 #endif

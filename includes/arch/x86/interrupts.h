@@ -7,8 +7,6 @@ typedef struct {
     unsigned int eip;
     unsigned int cs;
     unsigned int eflags;
-    unsigned int esp;
-    unsigned int ss;
 } __attribute__((packed)) isr_param;
 
 void

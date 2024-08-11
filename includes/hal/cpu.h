@@ -7,66 +7,32 @@ typedef unsigned int reg32;
 typedef unsigned short reg16;
 
 typedef struct {
-    reg32 eax;
-    reg32 ebx;
-    reg32 ecx;
-    reg32 edx;
     reg32 edi;
-    reg32 ebp;
     reg32 esi;
+    reg32 ebp;
     reg32 esp;
-    reg32 cs;
-    reg32 eip;
+    reg32 ebx;
+    reg32 edx;
+    reg32 ecx;
+    reg32 eax;
 } __attribute__((packed)) registers;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
-static inline reg32 cpu_rcr0() {
-    asm volatile ("mov %cr0, %eax");
-}
+reg32 cpu_r_cr0();
 
-static inline reg32 cpu_rcr2() {
-    asm volatile ("mov %cr2, %eax");
-}
+reg32 cpu_r_cr2();
 
-static inline reg32 cpu_rcr3() {
-    asm volatile ("mov %cr3, %eax");
-}
-#pragma GCC diagnostic pop
+reg32 cpu_r_cr3();
 
-static inline void cpu_lcr0(reg32 v) {
-    asm volatile (
-        "mov %0, %%cr0"
-        :: "r"(v)
-    );
-}
+void cpu_w_cr0(reg32 v);
 
-static inline void cpu_lcr2(reg32 v) {
-    asm volatile (
-        "mov %0, %%cr2"
-        :: "r"(v)
-    );
-}
+void cpu_w_cr2(reg32 v);
 
-static inline void cpu_lcr3(reg32 v) {
-    asm volatile (
-        "mov %0, %%cr3"
-        :: "r"(v)
-    );
-}
+void cpu_w_cr3(reg32 v);
 
-static inline void cpu_invplg(void* va) {
-    __asm__("invlpg (%0)" ::"r"((uintptr_t)va) : "memory");
-}
+void cpu_get_model(char* model_out);
 
-static inline void cpu_invtlb() {
-    reg32 interm;
-    __asm__(
-        "movl %%cr3, %0\n"
-        "movl %0, %%cr3"
-        :"=r"(interm)
-        :"r"(interm)
-    );
-}
+int cpu_brand_string_supported();
+
+void cpu_get_brand(char* brand_out);
 
 #endif
