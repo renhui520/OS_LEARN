@@ -40,36 +40,28 @@ void cpu_get_brand(char* brand_out) {
     brand_out[48] = '\0';
 }
 
-reg32 cpu_r_cr0() {
-    asm volatile ("mov %cr0, %eax");
+
+int
+cpu_has_apic() {
+    // reference: Intel manual, section 10.4.2
+    reg32 eax = 0, ebx = 0, edx = 0, ecx = 0;
+    __get_cpuid(1, &eax, &ebx, &ecx, &edx);
+    
+    return (edx & 0x100);
 }
 
-reg32 cpu_r_cr2() {
-    asm volatile ("mov %cr2, %eax");
+void
+cpu_rdmsr(uint32_t msr_idx, uint32_t* reg_high, uint32_t* reg_low)
+{
+    uint32_t h = 0, l = 0;
+    asm volatile("rdmsr" : "=d"(h), "=a"(l) : "c"(msr_idx));
+
+    *reg_high = h;
+    *reg_low = l;
 }
 
-reg32 cpu_r_cr3() {
-    asm volatile ("mov %cr3, %eax");
+void
+cpu_wrmsr(uint32_t msr_idx, uint32_t reg_high, uint32_t reg_low)
+{
+    asm volatile("wrmsr" : : "d"(reg_high), "a"(reg_low), "c"(msr_idx));
 }
-
-void cpu_w_cr0(reg32 v) {
-    asm volatile (
-        "mov %0, %%cr0"
-        :: "r"(v)
-    );
-}
-
-void cpu_w_cr2(reg32 v) {
-    asm volatile (
-        "mov %0, %%cr2"
-        :: "r"(v)
-    );
-}
-
-void cpu_w_cr3(reg32 v) {
-    asm volatile (
-        "mov %0, %%cr3"
-        :: "r"(v)
-    );
-}
-

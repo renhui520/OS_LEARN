@@ -18,7 +18,7 @@
     /* 根据System V ABI，栈地址必须16字节对齐 */
     /* 这里只是一个临时栈，在_hhk_init里面我们会初始化内核专用栈 */
     stack_bottom:
-        .skip 16318, 0
+        .skip 16318 * 2, 0
     stack_top:
 
 
@@ -41,6 +41,9 @@
                                  * linker more knowledge about the label 
                                  */
     start_: 
+        cld
+        # 确保屏蔽所有外中断，直到我们准备好PIC为止
+        cli
         movl $stack_top, %esp
 
         subl $16, %esp
