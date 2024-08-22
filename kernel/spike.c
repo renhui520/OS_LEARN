@@ -18,6 +18,7 @@ void __assert_fail(const char* expr, const char* file, unsigned int line) {
     spin();     // never reach
 }
 
+// 直接打印报错信息
 void panick(const char* msg) {
     asm(
         "int %0"

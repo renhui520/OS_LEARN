@@ -1,7 +1,7 @@
 #include <hal/cpu.h>
 #include <klibc/string.h>
 #include <awa/mm/page.h>
-#include <awa/mm/pmm.h>
+#include <awa/mm/pmm.h>`
 #include <awa/mm/vmm.h>
 #include <awa/spike.h>
 
@@ -13,6 +13,7 @@ vmm_init()
     // TODO: something here?
 }
 
+// 创建 并 返回 一个 可立即使用 的页目录 物理地址
 x86_page_table*
 vmm_init_pd()
 {
@@ -67,6 +68,8 @@ __vmm_map_internal(uint32_t l1_inx,
     return 1;
 }
 
+//尝试将 物理页 映射到 虚拟页
+//若目标虚拟页已映射，则寻找更大且未使用的地址进行映射
 void*
 vmm_map_page(void* va, void* pa, pt_attr tattr)
 {
@@ -111,6 +114,7 @@ vmm_map_page(void* va, void* pa, pt_attr tattr)
     return (void*)V_ADDR(l1_index, l2_index, PG_OFFSET(va));
 }
 
+// “强制” 将 物理页 映射到 特定 虚拟页 (若已存在，则覆盖)
 void*
 vmm_fmap_page(void* va, void* pa, pt_attr tattr)
 {
@@ -132,6 +136,7 @@ vmm_fmap_page(void* va, void* pa, pt_attr tattr)
     return (void*)V_ADDR(l1_index, l2_index, PG_OFFSET(va));
 }
 
+//为给定的 虚拟页 分配一个可用的 物理页
 void*
 vmm_alloc_page(void* vpn, pt_attr tattr)
 {
@@ -143,6 +148,7 @@ vmm_alloc_page(void* vpn, pt_attr tattr)
     return result;
 }
 
+// 分配多个连续的 虚拟页
 int
 vmm_alloc_pages(void* va, size_t sz, pt_attr tattr)
 {
@@ -168,6 +174,7 @@ vmm_alloc_pages(void* va, size_t sz, pt_attr tattr)
     return true;
 }
 
+//若映射不存在则设置新的映射，否则忽略操作
 void
 vmm_set_mapping(void* va, void* pa, pt_attr attr) {
     assert(((uintptr_t)va & 0xFFFU) == 0);
@@ -183,6 +190,7 @@ vmm_set_mapping(void* va, void* pa, pt_attr attr) {
     __vmm_map_internal(l1_index, l2_index, (uintptr_t)pa, attr, false);
 }
 
+//删除指定虚拟页的映射
 void
 vmm_unmap_page(void* va)
 {
@@ -211,6 +219,7 @@ vmm_unmap_page(void* va)
     }
 }
 
+//查询给定虚拟地址的映射信息
 v_mapping
 vmm_lookup(void* va)
 {
@@ -236,6 +245,7 @@ vmm_lookup(void* va)
     return mapping;
 }
 
+//虚拟地址 ---> 物理地址
 void*
 vmm_v2p(void* va)
 {

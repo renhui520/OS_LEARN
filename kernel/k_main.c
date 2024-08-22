@@ -58,6 +58,7 @@ _kernel_main()
 
 static datetime_t datetime;
 
+//存在时区，有8小时误差
 void test_timer(void* payload) {
     time_getdatetime(&datetime);
 

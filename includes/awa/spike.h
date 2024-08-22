@@ -9,17 +9,18 @@
 // 除法向下取整
 #define FLOOR(v, k)         ((v) >> (k))
 
-// 获取v最近的最大k倍数
+// 向上 获取v最近的最大k倍数
 #define ROUNDUP(v, k)       (((v) + (k) - 1) & ~((k) - 1))
 
-// 获取v最近的最小k倍数
+// 向下 获取v最近的最小k倍数
 #define ROUNDDOWN(v, k)     ((v) & ~((k) - 1))
 
+// 忙等待，用于暂停，或者用于节省计算机资源
 inline static void spin() {
     while(1);
 }
 
-#ifdef __AWAOS_DEBUG__
+#ifdef __AWAOS_DEBUG__      //判断是否在 debug 模式下
 #define assert(cond)                                  \
     if (!(cond)) {                                    \
         __assert_fail(#cond, __FILE__, __LINE__);     \
@@ -35,7 +36,7 @@ void __assert_fail(const char* expr, const char* file, unsigned int line) __attr
 #define assert_msg(cond, msg) (void)(cond);  //assert nothing
 #endif
 
-void panick(const char* msg);
+void panick(const char* msg);   //输出报错信息
 
 
 #define wait_until(cond)    while(!(cond));

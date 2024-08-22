@@ -5,8 +5,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define PM_PAGE_SIZE            4096
-#define PM_BMP_MAX_SIZE        (128 * 1024)
+#define PM_PAGE_SIZE            4096        // 每个物理页的大小
+#define PM_BMP_MAX_SIZE        (128 * 1024) // 位图的最大 大小
 
 /**
  * @brief 标注物理页为可使用
@@ -15,12 +15,14 @@
  */
 void pmm_mark_page_free(uintptr_t ppn);
 
+
 /**
  * @brief 标注物理页为已占用
  * 
  * @param ppn 
  */
 void pmm_mark_page_occupied(uintptr_t ppn);
+
 
 /**
  * @brief 标注多个连续的物理页为可用
@@ -30,6 +32,7 @@ void pmm_mark_page_occupied(uintptr_t ppn);
  */
 void pmm_mark_chunk_free(uintptr_t start_ppn, size_t page_count);
 
+
 /**
  * @brief 标注多个连续的物理页为已占用
  * 
@@ -38,6 +41,7 @@ void pmm_mark_chunk_free(uintptr_t start_ppn, size_t page_count);
  */
 void pmm_mark_chunk_occupied(uintptr_t start_ppn, size_t page_count);
 
+
 /**
  * @brief 分配一个可用的物理页
  * 
@@ -45,12 +49,14 @@ void pmm_mark_chunk_occupied(uintptr_t start_ppn, size_t page_count);
  */
 void* pmm_alloc_page();
 
+
 /**
  * @brief 初始化物理内存管理器
  * 
  * @param mem_upper_lim 最大可用内存地址
  */
 void pmm_init(uintptr_t mem_upper_lim);
+
 
 
 /**

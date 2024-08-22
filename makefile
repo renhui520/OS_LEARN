@@ -7,6 +7,8 @@ INCLUDES := $(patsubst %, -I%, $(INCLUDES_DIR))
 SOURCE_FILES := $(shell find -name "*.[cS]")
 SRC := $(patsubst ./%, $(OBJECT_DIR)/%.o, $(SOURCE_FILES))
 
+default: all
+
 $(OBJECT_DIR):
 	@mkdir -p $(OBJECT_DIR)
 

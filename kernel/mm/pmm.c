@@ -1,10 +1,12 @@
 #include <awa/mm/page.h>
 #include <awa/mm/pmm.h>
 
+//标记 单个物理页(page)
 #define MARK_PG_AUX_VAR(ppn)                                                   \
     uint32_t group = ppn / 8;                                                  \
     uint32_t msk = (0x80U >> (ppn % 8));                                       \
 
+//连续标记 多个物理页(chunk)
 #define MARK_CHUNK_AUX_VAR(start_ppn, page_count)                              \
     uint32_t group = start_ppn / 8;                                            \
     uint32_t offset = start_ppn % 8;                                           \
@@ -13,26 +15,33 @@
     uint32_t leading_shifts =                                                  \
       (page_count + offset) < 8 ? page_count : 8 - offset;
 
+// 位图数组，用于记录物理页的状态
 static uint8_t pm_bitmap[PM_BMP_MAX_SIZE];
 
+// 最大的物理页编号
 static uintptr_t max_pg;
 
 //  ... |xxxx xxxx |
 //  ... |-->|
+
+
+//标记 页 为 空闲
 void
 pmm_mark_page_free(uintptr_t ppn)
 {
     MARK_PG_AUX_VAR(ppn)
-    pm_bitmap[group] = pm_bitmap[group] & ~msk;
+    pm_bitmap[group] = pm_bitmap[group] & ~msk; // 标记为 空闲
 }
 
+//标记 页 为 已占用
 void
 pmm_mark_page_occupied(uintptr_t ppn)
 {
     MARK_PG_AUX_VAR(ppn)
-    pm_bitmap[group] = pm_bitmap[group] | msk;
+    pm_bitmap[group] = pm_bitmap[group] | msk;  // 标记为 已占用
 }
 
+//标记 块(多个页) 为 空闲
 void
 pmm_mark_chunk_free(uintptr_t start_ppn, size_t page_count)
 {
@@ -53,6 +62,7 @@ pmm_mark_chunk_free(uintptr_t start_ppn, size_t page_count)
       ~(((1U << (page_count > 8 ? remainder : 0)) - 1) << (8 - remainder));
 }
 
+//标记 块(多个页) 为 已占用
 void
 pmm_mark_chunk_occupied(uint32_t start_ppn, size_t page_count)
 {
@@ -74,6 +84,7 @@ pmm_mark_chunk_occupied(uint32_t start_ppn, size_t page_count)
 // 我们跳过位于0x0的页。我们不希望空指针是指向一个有效的内存空间。
 #define LOOKUP_START 1
 
+//页 指针 指向
 size_t pg_lookup_ptr;
 
 void

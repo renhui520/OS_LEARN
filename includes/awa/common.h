@@ -3,16 +3,16 @@
 
 #include <stddef.h>
 
-#define K_STACK_SIZE            (64 << 10)
-#define K_STACK_START           ((0xFFBFFFFFU - K_STACK_SIZE) + 1)
-#define HIGHER_HLF_BASE         0xC0000000UL
-#define MEM_1MB                 0x100000UL
+#define K_STACK_SIZE            (64 << 10)                              //内核栈大小为64KB
+#define K_STACK_START           ((0xFFBFFFFFU - K_STACK_SIZE) + 1)      //内核栈起始地址
+#define HIGHER_HLF_BASE         0xC0000000UL                            //高半段起始地址
+#define MEM_1MB                 0x100000UL                              //1MB
 
-#define VGA_BUFFER_VADDR        0xB0000000UL
-#define VGA_BUFFER_PADDR        0xB8000UL
-#define VGA_BUFFER_SIZE         4096
+#define VGA_BUFFER_VADDR        0xB0000000UL    // VGA缓冲区虚拟地址
+#define VGA_BUFFER_PADDR        0xB8000UL       // VGA缓冲区物理地址
+#define VGA_BUFFER_SIZE         4096            // VGA缓冲区大小
 
-#define SYS_TIMER_FREQUENCY_HZ  2048
+#define SYS_TIMER_FREQUENCY_HZ  2048            // 系统时钟频率
 
 
 // From Linux kernel v2.6.0 <kernel.h:194>

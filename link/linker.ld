@@ -11,7 +11,11 @@ SECTIONS {
     . = 0x100000;
 
     /* 这里是我们的高半核初始化代码段和数据段 */
-
+    /*
+        [ .hhk_init ]为boot.S中的代码段
+    
+    
+    */
     .hhk_init_text BLOCK(4K) : {
         * (.multiboot)
         build/obj/arch/x86/*.o (.hhk_init)
