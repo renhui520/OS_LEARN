@@ -91,6 +91,7 @@
         movl $(KPG_SIZE), 4(%esp)	# 为hhk.c中的_hhk_init(ptd_t* ptd, uint32_t kpg_size)提供kpg_size参数
         // .kpg段是虚拟段，所以_k_ptd也是属于虚拟地址！！！所以才需要( - 0xC0000000 )
         // 根据linker.ld里的配置 . += 0xC0000000 ，从而使.kpg段的地址 >=0xC0000000 看linker.ld最后的内容就知道了
+        // 因为前面 += 0xC0000000，所以要 - 0xC0000000
         movl $(_k_ptd - 0xC0000000), (%esp)    /* PTD物理地址 */   # 为hhk.c中的_hhk_init(ptd_t* ptd, uint32_t kpg_size)提供ptd参数
         call _hhk_init	# 调用hhk.c中的_hhk_init函数
 
@@ -107,11 +108,12 @@
  * 其中高 20 位用来存放页目录表的物理地址。
  * 低 12 位是保留位，必须为 0
 */
-        movl (%esp), %eax
+        //这里提供的ptd已经由_hhk_init中的_init_page映射好了
+        movl (%esp), %eax   //这里是用的movl $(_k_ptd - 0xC0000000), (%esp)中的esp(ptd)??????
         andl $0xfffff000, %eax      # 保留高位20位，清除低位12位。这一步是为了确保只保留页目录的基地址部分
         movl %eax, %cr3 /*%cr3是用于存储页目录基地址的控制寄存器，这里设置了页表目录的基地址*/
 
-        /* 开启分页与地址转换 (CR0.PG=1) *///剩下的代码里面好像并没有开启cr0的PG位!!!!!!!
+        /* 开启分页与地址转换 (CR0.PG=1) */
         //%cr0寄存器包含了处理器的控制和状态信息
 /*
  * CR0 是一个 32 位的寄存器，用于控制处理器的操作模式和一些关键特性
@@ -133,7 +135,7 @@
         movl %cr0, %eax         //保存到eax寄存器，方便 位或操作
         orl $0x80000000, %eax   //将%eax中的第31位(PG) 设为1，即设置 PG标志位(分页) 为1，开启分页
         //开启分页
-        //由于我们使用multiboot和grub，所以不需要手动设置cr0的PE位，grub会自动帮我们设置PE位，并进入32位保护模式
+        //由于我们使用multiboot和grub，所以不需要手动设置cr0的PE位，grub会 "自动" 帮我们设置 "PE位"，并进入32位保护模式
         movl %eax, %cr0 //将%eax中的新值写回到%cr0寄存器中，更新控制寄存器以启用分页功能
 
         addl $16, %esp //将栈指针%esp增加16个字节，清理栈空间，为后续操作做准备

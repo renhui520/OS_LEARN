@@ -11,6 +11,7 @@
 #define KWARN    "\x1b" _LEVEL_WARN
 #define KERROR   "\x1b" _LEVEL_ERROR
 
+//static使函数局部可见，当调用这个宏的时候会生成一个kprintf函数，且还会由于static避免与其他文件的kprintf名称冲突
 #define LOG_MODULE(module)                  \
     static void kprintf(const char* fmt, ...) {    \
         va_list args;                       \

@@ -1,11 +1,16 @@
 #include <awa/mm/page.h>
 #include <awa/mm/pmm.h>
 
+//ppn("Physical Page Number") 即 物理页号
 //标记 单个物理页(page)
 #define MARK_PG_AUX_VAR(ppn)                                                   \
     uint32_t group = ppn / 8;                                                  \
     uint32_t msk = (0x80U >> (ppn % 8));                                       \
+//0x80 ==> 1000 0000
+//当ppn % 8 == 0时，即不需要位移，刚好在第八位
+//直接使用即可
 
+//ppn("Physical Page Number") 即 物理页号
 //连续标记 多个物理页(chunk)
 #define MARK_CHUNK_AUX_VAR(start_ppn, page_count)                              \
     uint32_t group = start_ppn / 8;                                            \
@@ -15,7 +20,14 @@
     uint32_t leading_shifts =                                                  \
       (page_count + offset) < 8 ? page_count : 8 - offset;
 
-// 位图数组，用于记录物理页的状态
+/*
+ * 位图: 用于标记 物理页 的 "状态"
+ * 状态: 1. 空闲---------------------\____通常情况下只会用到这两种状态
+ *      2. 已占用--------------------/
+ *      3. 预留(高级情况下可能会用到)
+*/
+
+// 位图数组，用于记录 物理页 的 状态
 static uint8_t pm_bitmap[PM_BMP_MAX_SIZE];
 
 // 最大的物理页编号
@@ -42,6 +54,7 @@ pmm_mark_page_occupied(uintptr_t ppn)
 }
 
 //标记 块(多个页) 为 空闲
+//ppn("Physical Page Number") 即 物理页号
 void
 pmm_mark_chunk_free(uintptr_t start_ppn, size_t page_count)
 {
@@ -90,13 +103,13 @@ size_t pg_lookup_ptr;
 void
 pmm_init(uintptr_t mem_upper_lim)
 {
-    max_pg = (PG_ALIGN(mem_upper_lim) >> 12);
+    max_pg = (PG_ALIGN(mem_upper_lim) >> 12);//对齐并将 字节 除以 2 ^ 12得到最大物理页编号
 
     pg_lookup_ptr = LOOKUP_START;
 
-    // mark all as occupied
+    // 标记所有物理页为 [已占用]
     for (size_t i = 0; i < PM_BMP_MAX_SIZE; i++) {
-        pm_bitmap[i] = 0xFFU;
+        pm_bitmap[i] = 0xFFU;//0xFF = 1111 1111
     }
 }
 

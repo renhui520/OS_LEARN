@@ -13,11 +13,13 @@ static vga_attribute tty_theme_color = VGA_COLOR_BLACK;
 static uint32_t tty_x = 0;
 static uint16_t tty_y = 0;
 
+// 初始化tty的 VGA 缓冲区 并 清屏
 void tty_init(void* vga_buf) {
     tty_vga_buffer = (vga_attribute*)vga_buf;
     tty_clear();
 }
 
+// 设置tty的 VGA 缓冲区
 void tty_set_buffer(void* vga_buf) {
     tty_vga_buffer = (vga_attribute*)vga_buf;
 }

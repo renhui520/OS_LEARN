@@ -78,20 +78,88 @@ vmm_map_page(void* va, void* pa, pt_attr tattr)
         return NULL;
     }
 
+    // 好像没用 我不在debug下，用不到
     assert(((uintptr_t)va & 0xFFFU) == 0) assert(((uintptr_t)pa & 0xFFFU) == 0);
 
-    uint32_t l1_index = L1_INDEX(va);
-    uint32_t l2_index = L2_INDEX(va);
-    x86_page_table* l1pt = (x86_page_table*)L1_BASE_VADDR;
+/*
+二级页表: L1t ==> L2t
+0xFFFFF000 = 0xFFC00000 | 0x003FF000 | 0x00000000
+                L1          L2           offset
+约定:
+    ptd     = l1t
+    ptde    = l1te
+    pt      = l2t
+    pte     = l2te
+两级页表翻译，从ptd，或者说 l1t 开始
+
+初始化:
+        next = l1t
+        next 为页表的物理地址
+
+
+十六进制: 0xFFC00000 ==> 二进制: 11111111110000000000000000000000   0占22个位   所以 >> 22 = 1023
+十六进制: 0x003FF000 ==> 二进制: 1111111111000000000000             0占12个位   所以 >> 12 = 1023
+
+第一步:  next = next[0xFFC00000 >> 22] = next[1023]
+        等价于:
+            next = l1t[0xFFC00000 >> 22] = l1t[1023]]
+        next 将会作为第二步翻译的起始点
+        由于我们的页表设置，next = l1t
+
+第二步:  next = next[0x003FF000 >> 12] = next[1023]
+        等价于:
+            next = l1t[0x003FF000 >> 12] = l1t[1023]
+        可以看到，我们依然在 l1t 徘徊
+
+最后一步，加上 offset，得出最终的物理地址:
+        physical_address = next + offset = &next[offset]
+        等价于:
+            physical_address = l1t + offset = &l1t[offset]
+        可以看到，最终的physical_address是指向 l1te (l2t) 的物理地址
+        所以:
+            0xFFFFF000              表示一个指向 l1t页表    的指针
+            0xFFFFF000 + offset     表示一个指向 l1t页表项  的指针
+        同理:
+            0xFFFFF000 + i * 4096  表示一个指向 l1t第i个页表项(可以看作l2t页表)    的指针
+*/
+
+
+    //获得一级目录索引
+    uint32_t l1_index = L1_INDEX(va); //获取 并 保存 虚拟页目录索引 PDE
+    //获得二级目录索引
+    uint32_t l2_index = L2_INDEX(va); //获取 并 保存 虚拟页表索引 PTE
+    x86_page_table* l1pt = (x86_page_table*)L1_BASE_VADDR; //定义页目录
+    /*
+    L1_BASE_VADDR = 0xFFFFF000U 指向 PTD本身
+    x86_pte_t l1pte = l1pt->entry[l1_index];
+    l1pt->entry[l1_index]相当于在ptd页目录表中指向其中一个页目录项(页表PT)
+    */
 
     // 在页表与页目录中找到一个可用的空位进行映射（位于va或其附近）
-    x86_pte_t l1pte = l1pt->entry[l1_index];
-    x86_page_table* l2pt = (x86_page_table*)L2_VADDR(l1_index);
+    
+/*
+
+  l1pt  ptd + 0xFFFFF000 | 0x003FF000 | 0x00000000
+                ptd?          页表？        页表项？
+
+  l2pt  ptd + 0xFFFFF000 | 0xnnnnnnnn | 0x00000000
+                                A
+                                |
+                            l1_index << 12
+*/    
+
+
+    // 即 l1pt = l1t[1023][1023]
+    // l1pte = l1t[1023][1023][l1_index]可能没写对
+    x86_pte_t l1pte = l1pt->entry[l1_index];// 访问 页表数组 从而获得PTE 相当于0xFFFFF000 + l1_index * 4
+    // 即 l2pt = l1t[1023][l1_index]
+    // l2pte = l1t[1023][l1_index][l2_index]
+    x86_page_table* l2pt = (x86_page_table*)L2_VADDR(l1_index);//L2_VADDR(l1_index)相当于l1t[1023][l1_index]
     while (l1pte && l1_index < PG_MAX_ENTRIES) {
         if (l2_index == PG_MAX_ENTRIES) {
             l1_index++;
             l2_index = 0;
-            l1pte = l1pt->entry[l1_index];
+            l1pte = l1pt->entry[l1_index];//可能没写对
             l2pt = (x86_page_table*)L2_VADDR(l1_index);
         }
         // 页表有空位，只需要开辟一个新的 PTE (Level 2)

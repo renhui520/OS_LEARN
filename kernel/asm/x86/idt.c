@@ -7,6 +7,12 @@
 uint64_t _idt[IDT_ENTRY];
 uint16_t _idt_limit = sizeof(_idt) - 1;
 
+/*
+ * vector: 中断向量号 0~255
+ * seg_selector: 描述符选择子(例如:0x08代码段[SEG_R0_CODE])
+ * isr: 中断处理"函数", 表示调用哪个终端处理函数
+ * dpl: 描述符特权级别(即: 0～3 内核权限 ~ 用户权限)
+*/
 void _set_idt_entry(uint32_t vector, uint16_t seg_selector, void (*isr)(), uint8_t dpl) {
     uintptr_t offset = (uintptr_t)isr;
     _idt[vector] = (offset & 0xffff0000) | IDT_ATTR(dpl);

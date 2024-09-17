@@ -42,7 +42,7 @@ $(BUILD_DIR)/$(OS_ISO): $(ISO_DIR) $(BIN_DIR)/$(OS_BIN) GRUB_TEMPLATE
 all: clean $(BUILD_DIR)/$(OS_ISO)
 
 all-debug: O := -O0
-all-debug: CFLAGS := -m32 -g -std=gnu99 -ffreestanding $(O) $(W) $(ARCH_OPT) -D__LUNAIXOS_DEBUG__
+all-debug: CFLAGS := -m32 -g -std=gnu99 -ffreestanding $(O) $(W) $(ARCH_OPT) -D__AWAOS_DEBUG__
 all-debug: LDFLAGS := -m32 -g -ffreestanding $(O) -nostdlib
 all-debug: clean $(BUILD_DIR)/$(OS_ISO)
 	@echo "Dumping the disassembled kernel code to $(BUILD_DIR)/kdump.txt"

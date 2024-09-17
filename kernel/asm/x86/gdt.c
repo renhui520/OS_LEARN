@@ -18,8 +18,8 @@ void _set_gdt_entry(uint32_t index, uint32_t base, uint32_t limit, uint32_t flag
 void
 _init_gdt() {
     _set_gdt_entry(0, 0, 0, 0); // 空描述符
-    _set_gdt_entry(1, 0, 0xfffff, SEG_R0_CODE);
-    _set_gdt_entry(2, 0, 0xfffff, SEG_R0_DATA);
-    _set_gdt_entry(3, 0, 0xfffff, SEG_R3_CODE);
-    _set_gdt_entry(4, 0, 0xfffff, SEG_R3_DATA);
+    _set_gdt_entry(1, 0, 0xfffff, SEG_R0_CODE);//权限0 内核级权限 代码段
+    _set_gdt_entry(2, 0, 0xfffff, SEG_R0_DATA);//权限0 内核级权限 数据段
+    _set_gdt_entry(3, 0, 0xfffff, SEG_R3_CODE);//权限3 用户级权限 代码段
+    _set_gdt_entry(4, 0, 0xfffff, SEG_R3_DATA);//权限3 用户级权限 数据段
 }

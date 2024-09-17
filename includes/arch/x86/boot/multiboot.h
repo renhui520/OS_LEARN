@@ -66,6 +66,9 @@
 #define MULTIBOOT_INFO_VBE_INFO                 0x00000800
 #define MULTIBOOT_INFO_FRAMEBUFFER_INFO         0x00001000
 
+//检查 flags 是否 等于 某个标志位（info）
+//若是 返回非0
+//若否 返回 0
 #define present(flags, info)      ((flags) & (info))
 
 #ifndef __ASM__

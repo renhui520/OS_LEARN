@@ -29,7 +29,7 @@
         movw _gdt_limit, %ax    //_gdt_limit不是数组，所以需要放入ax寄存器，取地址
 
         movw %ax, (%esp)        // 将 _gdt_limit 入栈
-        lgdt (%esp)
+        lgdt (%esp) //lgdt需要从栈上读取数据
 
         /* 更新段寄存器 */
         movw $0x10, %cx //0x10 对应于 SEG_R0_DATA 描述符
@@ -58,7 +58,7 @@
         movw %cx, %ss
 
         /* 更新 CS:EIP 指针*/
-        pushw $0x08 //0x08 对应于 SEG_R0_CODE 描述符
+        pushw $0x08 //0x08 对应于 SEG_R0_CODE 描述符 被作为 "CS"
 /*
  * 0x08还做为CS 寄存器的值，因此它代表内核代码段
  * 0x08 对应于 SEG_R0_CODE 描述符
@@ -75,7 +75,7 @@
  *    索引3 权限3 十六进制数则等于 3 * 8 + 3 = 27 = 0x1B
 */
 
-        pushl $_after_gdt //将 _after_gdt 标签的地址压入堆栈，这将成为新的 EIP 值 将会被retf弹出
+        pushl $_after_gdt //将 _after_gdt 标签的地址压入堆栈，这将成为新的 "EIP" 值 将会被retf弹出
         retf //处理器从堆栈中弹出 _after_gdt 标签地址并将其赋值给 EIP 寄存器，然后从堆栈中弹出 0x08 并将其赋值给 CS 寄存器
 
 /*
@@ -91,20 +91,39 @@ retf(远返回) 弹出堆栈中的两个值，第一个默认被设置为EIP，�
 
     _after_gdt:
 
+        //往multiboot_info_t* _k_init_mb_info;中写入mb_info
+        //把汇编中的mb_info段的地址 写入multiboot_info_t* _k_init_mb_info; 结构体
         movl $mb_info, _k_init_mb_info
 
-        call _kernel_pre_init
+/*
+ * 初始化7个模块(内容):
+ * idt初始化设置
+ * 虚拟内存管理器
+ * 物理内存管理器
+ * 指定tty内存地址
+ * 指定tty显示的主题颜色
+ * intr_routine_init 不知道
+ * rtc 不知道
+*/
+        call _kernel_pre_init //初始化7个模块
 
-        subl $6, %esp
+        subl $6, %esp   //预留6字节空间
 
         # 加载 IDT
-        movl $_idt, 2(%esp)
-        movw _idt_limit, %ax
-        movw %ax, (%esp)
-        lidt (%esp)
+        movl $_idt, 2(%esp) //入栈    //_idt_limit位于idt.c中
+        movw _idt_limit, %ax    //_idt_limit位于idt.c中
+        movw %ax, (%esp) //入栈
+        lidt (%esp)     //加载IDT
 
-        addl $6, %esp
+        addl $6, %esp   //释放6字节空间
 
+/*
+ * 输出：内存信息？
+ *
+ * 设置：
+ * setup_memory
+ * setup_kernel_runtime
+*/
         call _kernel_init
 
         /* 

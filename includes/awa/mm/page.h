@@ -20,8 +20,8 @@
 //最高20位保持不变 最低12位被清零   4KB对齐?
 #define PG_ALIGN(addr)      ((uintptr_t)(addr)   & 0xFFFFF000UL)        // 将地址转换为页对齐的地址
 
-#define L1_INDEX(vaddr)     (uint32_t)(((uintptr_t)(vaddr) & 0xFFC00000UL) >> 22)   // 获取页目录索引 pde?
-#define L2_INDEX(vaddr)     (uint32_t)(((uintptr_t)(vaddr) & 0x003FF000UL) >> 12)   // 获取页表索引 pte?
+#define L1_INDEX(vaddr)     (uint32_t)(((uintptr_t)(vaddr) & 0xFFC00000UL) >> 22)   // 获取虚拟页目录索引 PDE?
+#define L2_INDEX(vaddr)     (uint32_t)(((uintptr_t)(vaddr) & 0x003FF000UL) >> 12)   // 获取虚拟页表索引 PTE?
 #define PG_OFFSET(vaddr)    (uint32_t)((uintptr_t)(vaddr)  & 0x00000FFFUL)        // 获取页内偏移
 
 #define GET_PT_ADDR(pde)    PG_ALIGN(pde)   // 获取页目录地址
@@ -32,7 +32,7 @@
 
 #define IS_CACHED(entry)    ((entry & 0x1)) // 获取页表是否被缓存
 
-#define PG_PRESENT              (0x1)       // 页表 [被映射][存在]
+#define PG_PRESENT              (0x1)       // 页表 [存在]
 #define PG_WRITE                (0x1 << 1)  // 页表 [可写]
 #define PG_ALLOW_USER           (0x1 << 2)  // 页表 [允许用户访问]
 #define PG_WRITE_THROUGHT       (1 << 3)    // 页表 [写回缓存]
@@ -51,8 +51,8 @@
 #define HAS_FLAGS(entry, flags)             ((PG_ENTRY_FLAGS(entry) & (flags)) == flags) // 判断页表是否包含 flags中所有的属性
 #define CONTAINS_FLAGS(entry, flags)        (PG_ENTRY_FLAGS(entry) & (flags)) // 判断页表是否包含 至少flags中的一个属性
 
-#define PG_PREM_R              PG_PRESENT                               // 页表  [存在]
-#define PG_PREM_RW             PG_PRESENT | PG_WRITE                    // 页表  [可写]
+#define PG_PREM_R              PG_PRESENT                               // 页表  [可读]
+#define PG_PREM_RW             PG_PRESENT | PG_WRITE                    // 页表  [可读写]
 #define PG_PREM_UR             PG_PRESENT | PG_ALLOW_USER               // 页表  [允许用户访问]
 #define PG_PREM_URW            PG_PRESENT | PG_WRITE | PG_ALLOW_USER    // 页表  [允许用户读写]
 
@@ -60,14 +60,63 @@
 #define T_SELF_REF_PERM        PG_PREM_RW | PG_DISABLE_CACHE
 
 
-// 页目录的虚拟基地址，可以用来访问到各个PDE
+/*
+0xFFFFF000U 在32位系统中表示一个非常高的地址，接近4GB的地址空间顶部
+二进制形式为： 11111111111111111111000000000000
+22到31位 作为 页目录索引 即转化为十进制为1023 代表第1024个页目录项(第1024个页表L1 的 PT)
+12到21位 作为 页表项索引 即转化为十进制为1023 代表第1024个页表项(第1024个页表项L1 的 PTE指向L2 PT)
+PTE 指向 物理页
+页目录的虚拟基地址，可以用来访问到各个PDE
+*/
+
+/*             包含
+二级页表: L1t页表 ==> L2t页表
+0xFFFFF000 = 0xFFC00000 | 0x003FF000 | 0x00000000
+                L1          L2           offset
+约定:
+    ptd     = l1t
+    ptde    = l1te
+    pt      = l2t
+    pte     = l2te
+两级页表翻译，从ptd，或者说 l1t 开始
+
+初始化:
+        next = l1t
+        next 为页表的物理地址
+
+
+十六进制: 0xFFC00000 ==> 二进制: 11111111110000000000000000000000   0占22个位   所以 >> 22 = 1023
+十六进制: 0x003FF000 ==> 二进制: 00000000001111111111000000000000   0占12个位   所以 >> 12 = 1023
+
+第一步:  next = next[0xFFC00000 >> 22] = next[1023]
+        等价于:
+            next = l1t[0xFFC00000 >> 22] = l1t[1023]]
+        next 将会作为第二步翻译的起始点
+        由于我们的页表设置，next = l1t
+
+第二步:  next = next[0x003FF000 >> 12] = next[1023]
+        等价于:
+            next = l1t[0x003FF000 >> 12] = l1t[1023]
+        可以看到，我们依然在 l1t 徘徊
+
+最后一步，加上 offset，得出最终的物理地址:
+        physical_address = next + offset = &next[offset]
+        等价于:
+            physical_address = l1t + offset = &l1t[offset]
+        可以看到，最终的physical_address是指向 l1te (l2t) 的物理地址
+        所以:
+            0xFFFFF000              表示一个指向 l1t页表    的指针
+            0xFFFFF000 + offset     表示一个指向 l1t页表项  的指针
+        同理:
+            0xFFFFF000 + i * 4      表示一个指向 l1t第i个页表项(可以看作l2t页表) 的指针
+*/
 #define L1_BASE_VADDR                0xFFFFF000U
 
 // 页表的虚拟基地址，可以用来访问到各个PTE
-#define L2_BASE_VADDR                 0xFFC00000U
+#define L2_BASE_VADDR                 0xFFC00000U   //为下面L2_VADDR 提供 上面注释中所提到的L1头
 
 // 用来获取特定的页表的虚拟地址
-#define L2_VADDR(pd_offset)           (L2_BASE_VADDR | (pd_offset << 12))
+#define L2_VADDR(pd_offset)           (L2_BASE_VADDR | (pd_offset << 12)) //因为 >> 12 所以要 << 12才能的到虚拟地址(舍弃掉offset位)
 
 typedef unsigned long ptd_t;
 typedef unsigned long pt_t;
@@ -89,7 +138,7 @@ typedef struct {
 typedef uint32_t x86_pte_t;
 typedef struct
 {
-    x86_pte_t entry[PG_MAX_ENTRIES]; // 页表项
+    x86_pte_t entry[PG_MAX_ENTRIES]; // "页表"数组 也就是 页表 页表中保存了页表项PTE PTE指向物理页
 } __attribute__((packed)) x86_page_table;
 
 

@@ -32,7 +32,7 @@ inline static void spin() {
     }
 void __assert_fail(const char* expr, const char* file, unsigned int line) __attribute__((noinline, noreturn));
 #else
-#define assert(cond) (void)(cond); //assert nothing
+#define assert(cond) (void)(cond); //assert nothing 没卵用
 #define assert_msg(cond, msg) (void)(cond);  //assert nothing
 #endif
 

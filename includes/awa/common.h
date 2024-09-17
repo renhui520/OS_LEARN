@@ -6,7 +6,7 @@
 #define K_STACK_SIZE            (64 << 10)                              //内核栈大小为64KB
 #define K_STACK_START           ((0xFFBFFFFFU - K_STACK_SIZE) + 1)      //内核栈起始地址
 #define HIGHER_HLF_BASE         0xC0000000UL                            //高半段起始地址
-#define MEM_1MB                 0x100000UL                              //1MB
+#define MEM_1MB                 0x100000UL                              //1MB(字节)
 
 #define VGA_BUFFER_VADDR        0xB0000000UL    // VGA缓冲区虚拟地址
 #define VGA_BUFFER_PADDR        0xB8000UL       // VGA缓冲区物理地址
